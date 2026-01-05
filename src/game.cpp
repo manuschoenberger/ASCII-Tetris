@@ -5,7 +5,7 @@
 #include <thread>
 #include <chrono>
 
-Game::Game(): current(), next(), gameOver(false), tick(0) {
+Game::Game(): current(), next(), gameOver(false), tick(0), score(0), level(0), totalLinesCleared(0), ticksPerDrop(baseTicksPerDrop), highscoreManager("highscore.txt") {
     current = createRandomPiece();
     current.x = BOARD_WIDTH / 2 - 2; // center the piece
     current.y = 0;
@@ -42,7 +42,8 @@ void Game::hardDrop() {
 
     current = temp;
     board.lockPiece(current);
-    board.clearLines();
+    int cleared = board.clearLines();
+    if (cleared > 0) onLinesCleared(cleared);
 }
 
 void Game::run() {
@@ -93,14 +94,15 @@ void Game::run() {
             }
         }
 
-        if (tick % 10 == 0) {
+        if (tick % ticksPerDrop == 0) {
             Tetromino temp = current;
             temp.y++;
 
             if (!board.collides(temp)) current = temp;
             else {
                 board.lockPiece(current);
-                board.clearLines();
+                int cleared = board.clearLines();
+                if (cleared > 0) onLinesCleared(cleared);
                 current = next;
                 current.x = BOARD_WIDTH / 2 - 2;
                 current.y = 0;
@@ -110,7 +112,7 @@ void Game::run() {
         }
 
         board.drawPiece(current);
-        board.draw();
+        board.draw(score, level, highscoreManager.getHighscore());
         drawNextPiece();
 
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
@@ -118,6 +120,38 @@ void Game::run() {
     }
 
     std::cout << "\nGAME OVER!\n";
+
+    if (highscoreManager.saveIfHigher(score)) {
+        std::cout << "New highscore saved: " << score << "\n";
+    } else {
+        std::cout << "Highscore: " << highscoreManager.getHighscore() << "\n";
+    }
+
+    std::cout << std::flush;
+    std::this_thread::sleep_for(std::chrono::seconds(5));
+
     std::cout << "\033[?25h"; // show cursor
 }
 
+// Leveling and scoring rules
+void Game::onLinesCleared(int cleared) {
+    int points = 0;
+
+    switch (cleared) {
+        case 1: points = 40 * (level + 1); break;
+        case 2: points = 100 * (level + 1); break;
+        case 3: points = 300 * (level + 1); break;
+        case 4: points = 1200 * (level + 1); break;
+        default: points = 0; break;
+    }
+
+    score += points;
+    totalLinesCleared += cleared;
+
+    int newLevel = totalLinesCleared / linesPerLevel;
+
+    if (newLevel > level) {
+        level = newLevel;
+        ticksPerDrop = std::max(1, baseTicksPerDrop - level);
+    }
+}

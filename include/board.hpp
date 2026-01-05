@@ -11,7 +11,7 @@ public:
 
     Board();
 
-    void draw() const; // draw to console
+    void draw(int score, int level, int highscore) const;
 
     void drawPiece(const Tetromino &t);
     void clearPiece();
@@ -20,4 +20,3 @@ public:
     void lockPiece(const Tetromino &t);
     int clearLines();
 };
-

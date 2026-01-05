@@ -7,8 +7,10 @@ Board::Board() {
             grid[y][x] = 0;
 }
 
-void Board::draw() const {
+void Board::draw(int score, int level, int highscore) const {
     std::cout << "\033[H"; // move cursor to home
+
+    std::cout << "Score: " << score << "    Level: " << level << "    High: " << highscore << "\n";
     std::cout << "┌---- ASCII TETRIS ---┐\n";
 
     for (int y = 0; y < BOARD_HEIGHT; y++) {
@@ -106,4 +108,3 @@ int Board::clearLines() {
 
     return cleared;
 }
-
