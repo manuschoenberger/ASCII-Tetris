@@ -50,6 +50,8 @@ void Game::run() {
     std::cout << "\033[?25l"; // hide cursor
     std::cout << "\033[2J"; // clear screen once
 
+    if (mode) mode->onStart(*this);
+
     while (!gameOver) {
         board.clearPiece();
 
@@ -92,6 +94,8 @@ void Game::run() {
                 next = createRandomPiece();
                 if (board.collides(current)) gameOver = true;
             }
+
+            if (mode) mode->onInput(*this, c);
         }
 
         if (tick % ticksPerDrop == 0) {
@@ -110,6 +114,8 @@ void Game::run() {
                 if (board.collides(current)) gameOver = true;
             }
         }
+
+        if (mode) mode->onTick(*this, tick);
 
         board.drawPiece(current);
         board.draw(score, level, highscoreManager.getHighscore());

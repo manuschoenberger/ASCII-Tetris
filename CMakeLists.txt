@@ -10,6 +10,8 @@ add_executable(tetris_cpp
         src/platform.cpp
         src/tetromino.cpp
         src/highscore.cpp
+        src/menu.cpp
+        src/modes.cpp
 )
 
 target_include_directories(tetris_cpp PRIVATE include)
