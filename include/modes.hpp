@@ -11,6 +11,7 @@ public:
     virtual void onStart(Game &game) {}
     virtual void onTick(Game &game, int tick) {}
     virtual void onInput(Game &game, int key) {}
+    virtual void onLock(Game &game) {}
     virtual std::string name() const = 0;
 };
 

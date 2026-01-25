@@ -11,8 +11,12 @@ public:
     Game();
     void run();
 
-    void setMode(std::shared_ptr<IMode> m) { mode = m; }
+    void setMode(std::shared_ptr<IMode> m) { mode = std::move(m); }
     HighscoreManager &getHighscoreManager() { return highscoreManager; }
+
+    void scheduleNextSpeedMultiplier(int m) { nextSpeedMultiplier = m; speedNotePending = (m > 1); }
+
+    int getScore() const { return score; }
 
 private:
     Board board;
@@ -31,6 +35,13 @@ private:
 
     HighscoreManager highscoreManager;
     std::shared_ptr<IMode> mode;
+
+    int nextSpeedMultiplier = 1; // multiplier to apply to next piece (default 1)
+    int activeSpeedMultiplier = 1; // multiplier currently in effect for the active piece
+
+    // note flags: pending means scheduled for next piece; active means the current piece is affected
+    bool speedNotePending = false;
+    bool speedNoteActive = false;
 
     void drawNextPiece() const;
     void hardDrop();

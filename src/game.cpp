@@ -5,7 +5,7 @@
 #include <thread>
 #include <chrono>
 
-Game::Game(): current(), next(), gameOver(false), tick(0), score(0), level(0), totalLinesCleared(0), ticksPerDrop(baseTicksPerDrop), highscoreManager("highscore.txt") {
+Game::Game(): current(), next(), gameOver(false), tick(0), score(0), level(0), totalLinesCleared(0), ticksPerDrop(baseTicksPerDrop), highscoreManager("highscore.txt"), nextSpeedMultiplier(1), activeSpeedMultiplier(1), speedNotePending(false), speedNoteActive(false) {
     current = createRandomPiece();
     current.x = BOARD_WIDTH / 2 - 2; // center the piece
     current.y = 0;
@@ -20,10 +20,8 @@ void Game::drawNextPiece() const {
         std::cout << "  ";
 
         for (int x = 0; x < 4; ++x) {
-            if (next.shape[y][x] == 1)
-                std::cout << " #";
-            else
-                std::cout << " .";
+            if (next.shape[y][x] == 1) std::cout << " #";
+            else std::cout << " .";
         }
 
         std::cout << "\n";
@@ -44,11 +42,25 @@ void Game::hardDrop() {
     board.lockPiece(current);
     int cleared = board.clearLines();
     if (cleared > 0) onLinesCleared(cleared);
+
+    // if the piece that just locked had the 3x-speed effect active, consume it and clear the note
+    if (speedNoteActive) {
+        speedNoteActive = false;
+        activeSpeedMultiplier = 1;
+    }
 }
 
 void Game::run() {
     std::cout << "\033[?25l"; // hide cursor
     std::cout << "\033[2J"; // clear screen once
+
+    // apply any scheduled speed effect before starting (unlikely at startup, but safe)
+    if (nextSpeedMultiplier > 1) {
+        activeSpeedMultiplier = nextSpeedMultiplier;
+        nextSpeedMultiplier = 1;
+        speedNoteActive = (activeSpeedMultiplier > 1);
+        speedNotePending = false;
+    }
 
     if (mode) mode->onStart(*this);
 
@@ -88,6 +100,23 @@ void Game::run() {
                 }
             } else if (c == ' ') {
                 hardDrop();
+
+                if (mode) mode->onLock(*this); // before spawning next, allow mode to schedule effects for the upcoming piece
+
+                // show indicator for the upcoming piece
+                if (speedNotePending) {
+                    board.draw(score, level, highscoreManager.getHighscore(), "3x speed for NEXT piece");
+                    std::cout << std::flush;
+                    std::this_thread::sleep_for(std::chrono::milliseconds(800));
+                }
+
+                activeSpeedMultiplier = nextSpeedMultiplier;
+                nextSpeedMultiplier = 1;
+
+                // pending note moves to active when the scheduled effect is applied
+                speedNoteActive = activeSpeedMultiplier > 1;
+                if (speedNoteActive) speedNotePending = false;
+
                 current = next;
                 current.x = BOARD_WIDTH / 2 - 2;
                 current.y = 0;
@@ -98,7 +127,8 @@ void Game::run() {
             if (mode) mode->onInput(*this, c);
         }
 
-        if (tick % ticksPerDrop == 0) {
+        // auto-drop logic
+        if (tick % std::max(1, ticksPerDrop / activeSpeedMultiplier) == 0) {
             Tetromino temp = current;
             temp.y++;
 
@@ -107,6 +137,29 @@ void Game::run() {
                 board.lockPiece(current);
                 int cleared = board.clearLines();
                 if (cleared > 0) onLinesCleared(cleared);
+
+                // if the piece that just locked had the 3x-speed effect active, consume it and clear the note
+                if (speedNoteActive) {
+                    speedNoteActive = false;
+                    activeSpeedMultiplier = 1;
+                }
+
+                if (mode) mode->onLock(*this); // allow mode to schedule an effect for the next piece
+
+                // show indicator for the upcoming piece
+                if (speedNotePending) {
+                    board.draw(score, level, highscoreManager.getHighscore(), "3x speed for NEXT piece");
+                    std::cout << std::flush;
+                    std::this_thread::sleep_for(std::chrono::milliseconds(800));
+                }
+
+                activeSpeedMultiplier = nextSpeedMultiplier;
+                nextSpeedMultiplier = 1;
+
+                // pending note moves to active when the scheduled effect is applied
+                speedNoteActive = activeSpeedMultiplier > 1;
+                if (speedNoteActive) speedNotePending = false;
+
                 current = next;
                 current.x = BOARD_WIDTH / 2 - 2;
                 current.y = 0;
@@ -118,14 +171,22 @@ void Game::run() {
         if (mode) mode->onTick(*this, tick);
 
         board.drawPiece(current);
-        board.draw(score, level, highscoreManager.getHighscore());
+
+        if (speedNoteActive) {
+            board.draw(score, level, highscoreManager.getHighscore(), "3x speed ACTIVE");
+        } else if (speedNotePending) {
+            board.draw(score, level, highscoreManager.getHighscore(), "3x speed for NEXT piece");
+        } else {
+            board.draw(score, level, highscoreManager.getHighscore());
+        }
+
         drawNextPiece();
 
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
         ++tick;
     }
 
-    std::cout << "\nGAME OVER!\n";
+    std::cout << "\nGAME OVER! Game closes shortly.\n";
 
     if (highscoreManager.saveIfHigher(score)) {
         std::cout << "New highscore saved: " << score << "\n";

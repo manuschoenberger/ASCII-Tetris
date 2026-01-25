@@ -13,7 +13,7 @@ void Menu::render(int highlight) const {
     std::cout << "===== ASCII TETRIS - MAIN MENU =====\n\n";
     std::cout << "Highscore: " << highscoreManager.getHighscore() << "\n\n";
 
-    std::vector<std::string> options = { "Normal Mode", "Fun Mode", "Hard Mode", "Mixed Mode", "Quit" };
+    std::vector<std::string> options = { "Normal Mode", "Fun Mode", "Hard Mode", "Mixed Mode (NOT AVAILABLE)", "Quit" };
 
     for (size_t i = 0; i < options.size(); ++i) {
         if (static_cast<int>(i) == highlight) std::cout << "> "; else std::cout << "  ";
@@ -38,7 +38,7 @@ Menu::Selection Menu::run() {
             if (c == '4') return Selection::Mixed;
             if (c == '5' || c == 'q' || c == 'Q') return Selection::Quit;
 
-            // handle arrow keys (simple)
+            // handle arrow keys
             if (c == 0 || c == 224) {
                 int c2 = platform::getch();
                 if (c2 == 72) { // up

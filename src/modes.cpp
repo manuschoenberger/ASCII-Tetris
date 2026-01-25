@@ -1,6 +1,7 @@
 #include "../include/modes.hpp"
 #include "../include/game.hpp"
 #include <memory>
+#include <cstdlib>
 
 namespace {
     struct BaseMode : IMode {
@@ -17,6 +18,16 @@ namespace {
 
     struct HardMode : BaseMode {
         std::string name() const override { return "Hard"; }
+
+        void onLock(Game &game) override {
+            if (game.getScore() < 500) return; // Negative power-ups start after 500 points
+
+            // 10% chance to trigger a negative
+            int r = std::rand() % 100;
+            if (r >= 10) return;
+
+            game.scheduleNextSpeedMultiplier(3);
+        }
     };
 
     struct MixedMode : BaseMode {

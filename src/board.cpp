@@ -1,5 +1,7 @@
 #include "../include/board.hpp"
 #include <iostream>
+#include <iomanip>
+#include <sstream>
 
 Board::Board() {
     for (int y = 0; y < BOARD_HEIGHT; ++y)
@@ -7,10 +9,28 @@ Board::Board() {
             grid[y][x] = 0;
 }
 
-void Board::draw(int score, int level, int highscore) const {
+void Board::draw(int score, int level, int highscore, const std::string &note) const {
     std::cout << "\033[H"; // move cursor to home
 
-    std::cout << "Score: " << score << "    Level: " << level << "    High: " << highscore << "\n";
+    std::ostringstream header;
+    header << "Score: " << score << "    Level: " << level << "    High: " << highscore;
+    std::cout << header.str();
+
+    int boardCharWidth = 2 * BOARD_WIDTH + 3; // left border + spaces + right border approx
+    int pad = std::max(2, boardCharWidth - (int)header.str().size());
+    for (int i = 0; i < pad; ++i) std::cout << ' ';
+
+    const int clearArea = 40; // reserve 40 chars for note area
+
+    if (!note.empty()) {
+        std::cout << "  " << note;
+        int remaining = clearArea - (int)note.size();
+        for (int i = 0; i < remaining; ++i) std::cout << ' ';
+    } else {
+        for (int i = 0; i < clearArea; ++i) std::cout << ' ';
+    }
+
+    std::cout << "\n";
     std::cout << "┌---- ASCII TETRIS ---┐\n";
 
     for (int y = 0; y < BOARD_HEIGHT; y++) {

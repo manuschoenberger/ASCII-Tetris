@@ -1,6 +1,7 @@
 #pragma once
 
 #include "tetromino.hpp"
+#include <string>
 
 constexpr int BOARD_WIDTH = 10;
 constexpr int BOARD_HEIGHT = 20;
@@ -11,7 +12,8 @@ public:
 
     Board();
 
-    void draw(int score, int level, int highscore) const;
+    // optional right-side note (e.g. warnings) will be printed to the right of the board header
+    void draw(int score, int level, int highscore, const std::string &note = "") const;
 
     void drawPiece(const Tetromino &t);
     void clearPiece();
