@@ -13,6 +13,7 @@ public:
     virtual void onInput(Game &game, int key) {}
     virtual void onLock(Game &game) {}
     virtual std::string name() const = 0;
+    virtual std::string getSideNote(const Game &game) const { return ""; }
 };
 
 // simple factory helpers

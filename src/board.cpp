@@ -2,36 +2,32 @@
 #include <iostream>
 #include <iomanip>
 #include <sstream>
-
-Board::Board() {
-    for (int y = 0; y < BOARD_HEIGHT; ++y)
-        for (int x = 0; x < BOARD_WIDTH; ++x)
-            grid[y][x] = 0;
-}
+#include <vector>
 
 void Board::draw(int score, int level, int highscore, const std::string &note) const {
     std::cout << "\033[H"; // move cursor to home
 
     std::ostringstream header;
     header << "Score: " << score << "    Level: " << level << "    High: " << highscore;
-    std::cout << header.str();
+    std::string headerStr = header.str();
 
-    int boardCharWidth = 2 * BOARD_WIDTH + 3; // left border + spaces + right border approx
-    int pad = std::max(2, boardCharWidth - (int)header.str().size());
-    for (int i = 0; i < pad; ++i) std::cout << ' ';
-
-    const int clearArea = 40; // reserve 40 chars for note area
-
+    std::vector<std::string> noteLines;
     if (!note.empty()) {
-        std::cout << "  " << note;
-        int remaining = clearArea - (int)note.size();
-        for (int i = 0; i < remaining; ++i) std::cout << ' ';
-    } else {
-        for (int i = 0; i < clearArea; ++i) std::cout << ' ';
+        std::istringstream ss(note);
+        std::string line;
+        while (std::getline(ss, line)) noteLines.push_back(line);
     }
 
+    const int clearArea = 40; // reserve 40 chars for note area
+    const int noteSlots = 4; // dedicate first 4 board rows to the 4 power-up notes
+
+    // print header (no notes next to header)
+    std::cout << headerStr;
     std::cout << "\n";
-    std::cout << "┌---- ASCII TETRIS ---┐\n";
+
+    std::cout << "┌---- ASCII TETRIS ---┐";
+    for (int i = 0; i < clearArea; ++i) std::cout << ' ';
+    std::cout << "\n";
 
     for (int y = 0; y < BOARD_HEIGHT; y++) {
         std::cout << "|";
@@ -42,10 +38,26 @@ void Board::draw(int score, int level, int highscore, const std::string &note) c
             else std::cout << " @"; // current piece
         }
 
-        std::cout << " |\n";
+        std::cout << " |";
+
+        // print note line next to the board row if available
+        if (y < noteSlots && y < (int)noteLines.size() && !noteLines[y].empty()) {
+            std::string nl = noteLines[y];
+            // truncate if too long
+            if ((int)nl.size() > clearArea) nl = nl.substr(0, clearArea);
+            std::cout << "  " << nl;
+            int remaining = clearArea - (int)nl.size();
+            for (int i = 0; i < remaining; ++i) std::cout << ' ';
+        } else {
+            for (int i = 0; i < clearArea; ++i) std::cout << ' ';
+        }
+
+        std::cout << "\n";
     }
 
-    std::cout << "└---------------------┘\n";
+    std::cout << "└---------------------┘";
+
+    std::cout << "\n";
     std::cout.flush();
 }
 
@@ -64,10 +76,9 @@ void Board::drawPiece(const Tetromino &t) {
 }
 
 void Board::clearPiece() {
-    for (int y = 0; y < BOARD_HEIGHT; ++y)
-        for (int x = 0; x < BOARD_WIDTH; ++x)
-            if (grid[y][x] == 2)
-                grid[y][x] = 0;
+    for (auto &row : grid)
+        for (auto &cell : row)
+            if (cell == 2) cell = 0;
 }
 
 bool Board::collides(const Tetromino &t) const {

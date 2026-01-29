@@ -5,12 +5,70 @@
 #include <thread>
 #include <chrono>
 
-Game::Game(): current(), next(), gameOver(false), tick(0), score(0), level(0), totalLinesCleared(0), ticksPerDrop(baseTicksPerDrop), highscoreManager("highscore.txt"), nextSpeedMultiplier(1), activeSpeedMultiplier(1), speedNotePending(false), speedNoteActive(false) {
+Game::Game(): current(), next(), gameOver(false), tick(0), score(0), level(0), totalLinesCleared(0), ticksPerDrop(baseTicksPerDrop), highscoreManager("highscore.txt"), nextSpeedMultiplier(1), activeSpeedMultiplier(1), speedNotePending(false), speedNoteActive(false), slowPiecesRemaining(0), slowActiveForCurrent(false), slowFactorActive(1) {
     current = createRandomPiece();
     current.x = BOARD_WIDTH / 2 - 2; // center the piece
     current.y = 0;
 
     next = createRandomPiece(); // next piece
+}
+
+void Game::fillBottomHole() {
+    for (int y = BOARD_HEIGHT - 1; y >= 0; --y) {
+        for (int x = 0; x < BOARD_WIDTH; ++x) {
+            if (board.grid[y][x] == 0) {
+                board.grid[y][x] = 1;
+                return;
+            }
+        }
+    }
+}
+
+void Game::activateSlowForSpawnedPiece() {
+    if (slowPiecesRemaining > 0) {
+        slowActiveForCurrent = true;
+        slowPiecesRemaining -= 1;
+    } else {
+        slowActiveForCurrent = false;
+    }
+}
+
+void Game::skipCurrentPiece() {
+    current = next;
+    current.x = BOARD_WIDTH / 2 - 2;
+    current.y = 0;
+    next = createRandomPiece();
+
+    activateSlowForSpawnedPiece(); // when skipping, the new current is considered a newly spawned piece -> activate slow for it if available
+}
+
+void Game::applySlowToActivePiece(int factor) {
+    if (factor <= 1) return;
+    slowPiecesRemaining += 3;
+    slowFactorActive = factor;
+
+    // immediately apply to the currently active piece as well
+    if (!slowActiveForCurrent && slowPiecesRemaining > 0) {
+        slowActiveForCurrent = true;
+        slowPiecesRemaining -= 1;
+    }
+}
+
+void Game::deleteTopRows(int n) {
+    if (n <= 0) return;
+    int removed = 0;
+    for (int y = 0; y < BOARD_HEIGHT && removed < n; ++y) {
+        bool hasLocked = false;
+        for (int x = 0; x < BOARD_WIDTH; ++x) if (board.grid[y][x] == 1) { hasLocked = true; break; }
+        if (hasLocked) {
+            for (int ty = y; ty > 0; --ty)
+                for (int tx = 0; tx < BOARD_WIDTH; ++tx)
+                    board.grid[ty][tx] = board.grid[ty - 1][tx];
+            for (int tx = 0; tx < BOARD_WIDTH; ++tx) board.grid[0][tx] = 0;
+            ++removed;
+            --y; // re-check
+        }
+    }
 }
 
 void Game::drawNextPiece() const {
@@ -63,6 +121,8 @@ void Game::run() {
     }
 
     if (mode) mode->onStart(*this);
+
+    activateSlowForSpawnedPiece(); // ensure the initial piece respects any already scheduled slow pieces
 
     while (!gameOver) {
         board.clearPiece();
@@ -122,13 +182,18 @@ void Game::run() {
                 current.y = 0;
                 next = createRandomPiece();
                 if (board.collides(current)) gameOver = true;
+
+                activateSlowForSpawnedPiece(); // after spawn, activate slow if scheduled
             }
 
             if (mode) mode->onInput(*this, c);
         }
 
         // auto-drop logic
-        if (tick % std::max(1, ticksPerDrop / activeSpeedMultiplier) == 0) {
+        int effectiveTicksPerDrop = ticksPerDrop;
+        if (slowActiveForCurrent) effectiveTicksPerDrop = ticksPerDrop * slowFactorActive;
+
+        if (tick % std::max(1, effectiveTicksPerDrop / activeSpeedMultiplier) == 0) {
             Tetromino temp = current;
             temp.y++;
 
@@ -142,6 +207,11 @@ void Game::run() {
                 if (speedNoteActive) {
                     speedNoteActive = false;
                     activeSpeedMultiplier = 1;
+                }
+
+                // if slow-note active for this piece, consume it now
+                if (slowActiveForCurrent) {
+                    slowActiveForCurrent = false;
                 }
 
                 if (mode) mode->onLock(*this); // allow mode to schedule an effect for the next piece
@@ -165,6 +235,8 @@ void Game::run() {
                 current.y = 0;
                 next = createRandomPiece();
                 if (board.collides(current)) gameOver = true;
+
+                activateSlowForSpawnedPiece(); // after spawn, activate slow if scheduled
             }
         }
 
@@ -177,7 +249,9 @@ void Game::run() {
         } else if (speedNotePending) {
             board.draw(score, level, highscoreManager.getHighscore(), "3x speed for NEXT piece");
         } else {
-            board.draw(score, level, highscoreManager.getHighscore());
+            std::string note = "";
+            if (mode) note = mode->getSideNote(*this);
+            board.draw(score, level, highscoreManager.getHighscore(), note);
         }
 
         drawNextPiece();

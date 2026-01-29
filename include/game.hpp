@@ -18,6 +18,12 @@ public:
 
     int getScore() const { return score; }
 
+    // Fun-mode / mode effect helper APIs (minimal public surface)
+    void fillBottomHole();
+    void skipCurrentPiece();
+    void applySlowToActivePiece(int factor); // now schedules the slow effect for the next N pieces (3 by default via FunMode)
+    void deleteTopRows(int n);
+
 private:
     Board board;
     Tetromino current;
@@ -43,7 +49,17 @@ private:
     bool speedNotePending = false;
     bool speedNoteActive = false;
 
+    // slow effect state: how many upcoming pieces should be slowed, and whether current piece is slowed
+    int slowPiecesRemaining = 0; // number of upcoming pieces that will be slowed
+    bool slowActiveForCurrent = false; // whether the currently active piece is slowed
+    int slowFactorActive = 1; // multiplier for slowing (e.g., 3)
+
     void drawNextPiece() const;
     void hardDrop();
     void onLinesCleared(int cleared);
+
+    // helper to activate slow effect for newly spawned piece
+    void activateSlowForSpawnedPiece();
+
+    friend class IMode; // allow modes to call game.* helpers if needed
 };
