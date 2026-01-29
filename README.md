@@ -2,6 +2,8 @@
 
 A small console-based Tetris clone written in C++ (C++20). The game runs in a Windows console and uses simple ASCII drawing and keyboard input. This README explains what the project offers, how it is built and run, how the game functions at a high level, and how to play.
 
+![Gameplay](docs/screenshots/gameplay.png)
+
 ---
 
 ## What this project is
@@ -18,6 +20,8 @@ A minimal ASCII Tetris implementation with multiple play modes and a persistent 
 - Simple keyboard controls for movement, rotation and hard drop.
 - Fun-mode power-ups (activated by pressing 1-4 when available).
 - Scoring and level progression based on lines cleared.
+
+![Main Menu](docs/screenshots/menu.png)
 
 ### Fun Mode — Power-ups (detailed)
 
