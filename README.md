@@ -23,7 +23,7 @@ A minimal ASCII Tetris implementation with multiple play modes and a persistent 
 
 ![Main Menu](docs/screenshots/menu.png)
 
-### Fun Mode — Power-ups (detailed)
+### Fun Mode (Power-ups)
 
 Fun Mode grants up to four different power-ups that become available once you reach certain score thresholds. Each power-up also has a cooldown measured in the number of locked tetrominos (pieces) after activation. When a power-up is ready, the game shows a side-note with entries like:
 
