@@ -1,0 +1,58 @@
+# Ignore build directories and generated files
+cmake-build-debug/
+build/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+build.ninja
+Makefile
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+
+# Executables, object files, libraries
+*.exe
+*.out
+*.o
+*.obj
+*.a
+*.lib
+*.so
+*.dylib
+
+# CLion / JetBrains
+.idea/
+*.iml
+*.cmake.user
+
+# VSCode
+.vscode/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Editor temporary / backup files
+*~
+*.swp
+*.swo
+*.tmp
+*.bak
+
+# Logs and temporary testing files
+*.log
+Testing/Temporary/
+
+# Highscore created in build dir (keep project-level highscore if you want it tracked)
+/cmake-build-debug/highscore.txt
+
+# Coverage / profiler / sanitizer outputs
+coverage/
+*.gcda
+*.gcno
+*.prof
+
+# Misc
+*.exe.stackdump
+
+# End of .gitignore
