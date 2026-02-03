@@ -80,7 +80,7 @@ Files of interest:
 - `src/game.cpp` — main loop, input handling, scoring rules and level progression.
 - `src/menu.cpp` — menu rendering and menu key handling.
 - `src/modes.cpp` — mode implementations (Normal, Fun, Hard, Mixed factory helpers).
-- `src/highscore.cpp` and `include/highscore.hpp` — highscore persistence logic.
+- `src/highscore.cpp` — highscore persistence logic.
 - `src/platform.cpp` — Windows console initialization and input helpers (`platform::init()`, `platform::restore()`, `platform::kbhit()`, `platform::getch()`).
 
 ## Controls

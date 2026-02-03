@@ -1,7 +1,6 @@
 #pragma once
 
 #include "highscore.hpp"
-#include <memory>
 
 class Menu {
 public:
@@ -15,7 +14,7 @@ public:
 
     explicit Menu(HighscoreManager &hs);
 
-    Selection run(); // Runs the menu loop and returns the user's selection.
+    Selection run();
 
 private:
     HighscoreManager &highscoreManager;

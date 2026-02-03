@@ -12,6 +12,7 @@ void Board::draw(int score, int level, int highscore, const std::string &note) c
     std::string headerStr = header.str();
 
     std::vector<std::string> noteLines;
+
     if (!note.empty()) {
         std::istringstream ss(note);
         std::string line;

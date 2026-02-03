@@ -5,7 +5,7 @@
 #include <thread>
 #include <chrono>
 
-Game::Game(): current(), next(), gameOver(false), tick(0), score(0), level(0), totalLinesCleared(0), ticksPerDrop(baseTicksPerDrop), highscoreManager("highscore.txt"), nextSpeedMultiplier(1), activeSpeedMultiplier(1), speedNotePending(false), speedNoteActive(false), slowPiecesRemaining(0), slowActiveForCurrent(false), slowFactorActive(1) {
+Game::Game(): current(), next(), gameOver(false), tick(0), score(0), level(0), totalLinesCleared(0), ticksPerDrop(baseTicksPerDrop), highscoreManager("highscore.txt") {
     current = createRandomPiece();
     current.x = BOARD_WIDTH / 2 - 2; // center the piece
     current.y = 0;
@@ -57,14 +57,23 @@ void Game::applySlowToActivePiece(int factor) {
 void Game::deleteTopRows(int n) {
     if (n <= 0) return;
     int removed = 0;
+
     for (int y = 0; y < BOARD_HEIGHT && removed < n; ++y) {
         bool hasLocked = false;
-        for (int x = 0; x < BOARD_WIDTH; ++x) if (board.grid[y][x] == 1) { hasLocked = true; break; }
+        for (int x = 0; x < BOARD_WIDTH; ++x) {
+            if (board.grid[y][x] == 1) {
+                hasLocked = true;
+                break;
+            }
+        }
+
         if (hasLocked) {
             for (int ty = y; ty > 0; --ty)
                 for (int tx = 0; tx < BOARD_WIDTH; ++tx)
                     board.grid[ty][tx] = board.grid[ty - 1][tx];
+
             for (int tx = 0; tx < BOARD_WIDTH; ++tx) board.grid[0][tx] = 0;
+
             ++removed;
             --y; // re-check
         }
@@ -122,7 +131,7 @@ void Game::run() {
 
     if (mode) mode->onStart(*this);
 
-    activateSlowForSpawnedPiece(); // ensure the initial piece respects any already scheduled slow pieces
+    activateSlowForSpawnedPiece(); // activate slow for the first piece if scheduled
 
     while (!gameOver) {
         board.clearPiece();

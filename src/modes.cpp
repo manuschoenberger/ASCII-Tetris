@@ -15,8 +15,8 @@ namespace {
 
     struct FunMode : BaseMode {
         struct Powerup {
-            int pointsThreshold = 0;
-            int cooldownNeeded = 0;
+            int pointsThreshold = 0; // points needed to unlock
+            int cooldownNeeded = 0; // number of fixed tetrominos needed to cooldown
             int fixedSinceUse = -1; // -1 means not used / not currently cooling; >=0 counts fixed tetrominos since use
             bool ready = false;
         };
@@ -35,7 +35,8 @@ namespace {
         }
 
         void onTick(Game &game, int tick) override {
-            (void)tick; (void)game;
+            (void)tick;
+            (void)game;
         }
 
         void onInput(Game &game, int key) override {

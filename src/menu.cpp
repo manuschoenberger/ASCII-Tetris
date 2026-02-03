@@ -41,6 +41,7 @@ Menu::Selection Menu::run() {
             // handle arrow keys
             if (c == 0 || c == 224) {
                 int c2 = platform::getch();
+
                 if (c2 == 72) { // up
                     highlight = std::max(0, highlight - 1);
                     render(highlight);

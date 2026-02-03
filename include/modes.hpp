@@ -3,7 +3,7 @@
 #include <memory>
 #include <string>
 
-class Game; // forward
+class Game;
 
 class IMode {
 public:
@@ -16,7 +16,6 @@ public:
     virtual std::string getSideNote(const Game &game) const { return ""; }
 };
 
-// simple factory helpers
 std::shared_ptr<IMode> createNormalMode();
 std::shared_ptr<IMode> createFunMode();
 std::shared_ptr<IMode> createHardMode();
